@@ -11,11 +11,13 @@ from django.utils import timezone
 
 from .models import Check, CheckResult, Alert
 
+
 def _tcp_check(host: str, port: int, timeout: int):
     t0 = time.time()
     with socket.create_connection((host, port), timeout=timeout):
         pass
     return (time.time() - t0) * 1000.0
+
 
 def _ping_check(host: str, timeout: int):
     # ping binaire Debian souvent setuid -> OK sans capabilities custom
@@ -26,6 +28,7 @@ def _ping_check(host: str, timeout: int):
         raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "Ping failed")
     return ms
 
+
 def _http_check(url: str, timeout: int, expected_status: int):
     t0 = time.time()
     r = requests.get(url, timeout=timeout, allow_redirects=True)
@@ -34,42 +37,61 @@ def _http_check(url: str, timeout: int, expected_status: int):
         raise RuntimeError(f"HTTP {r.status_code} (expected {expected_status})")
     return ms
 
+
 def _ssl_expiry_check(host: str, port: int, timeout: int, days_threshold: int):
     ctx = ssl.create_default_context()
     with socket.create_connection((host, port), timeout=timeout) as sock:
         with ctx.wrap_socket(sock, server_hostname=host) as ssock:
             cert = ssock.getpeercert()
-    # notAfter ex: 'Jun 15 12:00:00 2027 GMT'
+
     not_after = cert.get("notAfter")
     if not not_after:
         raise RuntimeError("No notAfter in certificate")
+
+    # ex: 'Jun 15 12:00:00 2027 GMT'
     exp = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=dt_timezone.utc)
     remaining_days = (exp - datetime.now(dt_timezone.utc)).days
+
     if remaining_days < days_threshold:
         raise RuntimeError(f"SSL expires in {remaining_days} days (threshold {days_threshold})")
+
     return remaining_days
 
+
 def _open_or_update_alert(check: Check, severity: str, title: str, details: str):
-    alert = Alert.objects.filter(check=check, is_open=True).first()
+    alert = Alert.objects.filter(monitor_check=check, is_open=True).first()
     if alert:
         alert.severity = severity
         alert.title = title
         alert.details = details
         alert.save(update_fields=["severity", "title", "details"])
         return alert, False
-    return Alert.objects.create(check=check, is_open=True, severity=severity, title=title, details=details), True
+
+    return Alert.objects.create(
+        monitor_check=check,
+        is_open=True,
+        severity=severity,
+        title=title,
+        details=details,
+    ), True
+
 
 def _resolve_alerts(check: Check):
-    qs = Alert.objects.filter(check=check, is_open=True)
     now = timezone.now()
-    qs.update(is_open=False, closed_at=now)
+    Alert.objects.filter(monitor_check=check, is_open=True).update(is_open=False, closed_at=now)
+
 
 def _maybe_email(subject: str, body: str):
+    """
+    V1: envoie si un SMTP est configuré, sinon ça log en console (EMAIL_BACKEND console).
+    """
     try:
+        # recipients vide = pas d'envoi réel. À toi d'ajouter une liste plus tard (settings).
+        # Ici on laisse fail_silently=True pour ne pas casser les checks.
         send_mail(subject, body, None, [], fail_silently=True)
     except Exception:
-        # ignore hard errors in v1
         pass
+
 
 @shared_task
 def run_check(check_id: int):
@@ -77,7 +99,7 @@ def run_check(check_id: int):
     if not check.is_enabled or not check.asset.is_enabled:
         return
 
-    host = check.target.strip() or check.asset.ip_or_host.strip()
+    host = (check.target or "").strip() or check.asset.ip_or_host.strip()
 
     ok = False
     message = ""
@@ -117,17 +139,29 @@ def run_check(check_id: int):
         ok = False
         message = str(e)[:2000]
 
-    CheckResult.objects.create(check=check, ok=ok, message=message, latency_ms=latency_ms)
+    # ✅ renommage ici
+    CheckResult.objects.create(
+        monitor_check=check,
+        ok=ok,
+        message=message,
+        latency_ms=latency_ms,
+    )
     Check.objects.filter(id=check.id).update(last_run_at=timezone.now())
 
     if ok:
         _resolve_alerts(check)
     else:
         title = f"{check.asset.name}: {check.name} FAILED"
-        details = f"Asset: {check.asset.name}\nHost: {host}\nKind: {check.kind}\nMessage: {message}"
+        details = (
+            f"Asset: {check.asset.name}\n"
+            f"Host: {host}\n"
+            f"Kind: {check.kind}\n"
+            f"Message: {message}"
+        )
         alert, created = _open_or_update_alert(check, "critical", title, details)
         if created:
             _maybe_email(f"[ArcanePanel] {title}", details)
+
 
 @shared_task
 def run_all_checks():

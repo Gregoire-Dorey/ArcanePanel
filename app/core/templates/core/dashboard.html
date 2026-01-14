@@ -51,8 +51,8 @@
             {% for a in latest_alerts %}
               <tr>
                 <td>{% if a.is_open %}<span class="badge bg-warning text-dark">OPEN</span>{% else %}<span class="badge bg-secondary">CLOSED</span>{% endif %}</td>
-                <td>{{ a.check.asset.name }}</td>
-                <td>{{ a.check.name }}</td>
+                <td>{{ a.monitor_check.asset.name }}</td>
+                <td>{{ a.monitor_check.name }}</td>
                 <td>{{ a.severity }}</td>
                 <td>{{ a.opened_at }}</td>
               </tr>

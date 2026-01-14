@@ -50,7 +50,7 @@ class Check(models.Model):
 
 
 class CheckResult(models.Model):
-    check = models.ForeignKey(Check, on_delete=models.CASCADE, related_name="results")
+    monitor_check = models.ForeignKey(Check, on_delete=models.CASCADE, related_name="results")
     ok = models.BooleanField(default=False)
     message = models.TextField(blank=True)
     latency_ms = models.FloatField(null=True, blank=True)
@@ -59,7 +59,7 @@ class CheckResult(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["recorded_at"]),
-            models.Index(fields=["check", "recorded_at"]),
+            models.Index(fields=["monitor_check", "recorded_at"]),
         ]
 
 
@@ -69,7 +69,7 @@ class Alert(models.Model):
         ("warning", "Warning"),
         ("critical", "Critical"),
     ]
-    check = models.ForeignKey(Check, on_delete=models.CASCADE, related_name="alerts")
+    monitor_check = models.ForeignKey(Check, on_delete=models.CASCADE, related_name="alerts")
     is_open = models.BooleanField(default=True)
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default="critical")
     title = models.CharField(max_length=200)
@@ -100,6 +100,7 @@ class Job(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
+
 
 class JobLog(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="logs")
