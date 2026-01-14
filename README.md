@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.svg" alt="Arcane Panel" width="140" />
+  <img src="arcanepanel.png" alt="Arcane Panel" width="140" />
 </p>
 
 <h1 align="center">Arcane Panel</h1>
