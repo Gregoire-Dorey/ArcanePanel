@@ -33,10 +33,10 @@
 
 <p align="center">
   <!-- Repo badges -->
-  <img alt="Last commit" src="https://img.shields.io/github/last-commit/OWNER/REPO?style=flat&logo=git&logoColor=white" />
-  <img alt="Issues" src="https://img.shields.io/github/issues/OWNER/REPO?style=flat&logo=github&logoColor=white" />
-  <img alt="Stars" src="https://img.shields.io/github/stars/OWNER/REPO?style=flat&logo=github&logoColor=white" />
-  <img alt="License" src="https://img.shields.io/github/license/OWNER/REPO?style=flat&logo=law&logoColor=white" />
+  <img alt="Last commit" src="https://img.shields.io/github/last-commit/Gregoire-Dorey/ArcanePanel?style=flat&logo=git&logoColor=white" />
+  <img alt="Issues" src="https://img.shields.io/github/issues/Gregoire-Dorey/ArcanePanel?style=flat&logo=github&logoColor=white" />
+  <img alt="Stars" src="https://img.shields.io/github/stars/Gregoire-Dorey/ArcanePanel?style=flat&logo=github&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/github/license/Gregoire-Dorey/ArcanePanel?style=flat&logo=law&logoColor=white" />
 </p>
 
 ---
