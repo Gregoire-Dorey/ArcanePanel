@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-arcane_panel}
+      POSTGRES_USER: ${POSTGRES_USER:-arcane}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arcane}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+
+  web:
+    build: .
+    env_file: .env
+    command: ["bash", "-lc", "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn arcane_panel.wsgi:application --bind 0.0.0.0:8000 --workers 2"]
+    volumes:
+      - ./app:/app
+      - staticdata:/static
+    ports:
+      - "${PANEL_PORT:-8000}:8000"
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build: .
+    env_file: .env
+    command: ["bash", "-lc", "celery -A arcane_panel worker -l INFO"]
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  beat:
+    build: .
+    env_file: .env
+    command: ["bash", "-lc", "celery -A arcane_panel beat -l INFO"]
+    volumes:
+      - ./app:/app
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  staticdata:

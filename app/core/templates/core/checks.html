@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Checks</h1>
+
+<div class="alert alert-secondary bg-black border-secondary text-light">
+  Pour créer/modifier les checks facilement : passe par <a class="text-light" href="/admin/">/admin</a> (modèle Check).
+</div>
+
+<div class="card bg-black border-secondary">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-dark table-striped align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Nom</th>
+            <th>Type</th>
+            <th>Target</th>
+            <th>Port</th>
+            <th>Interval</th>
+            <th>Enabled</th>
+            <th>Last run</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td>{{ it.asset.name }}</td>
+            <td class="fw-semibold">{{ it.name }}</td>
+            <td>{{ it.get_kind_display }}</td>
+            <td class="text-secondary">{{ it.target|default:"(asset host)" }}</td>
+            <td>{{ it.port|default:"-" }}</td>
+            <td>{{ it.interval_seconds }}s</td>
+            <td>{% if it.is_enabled %}✅{% else %}❌{% endif %}</td>
+            <td class="text-secondary">{{ it.last_run_at|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

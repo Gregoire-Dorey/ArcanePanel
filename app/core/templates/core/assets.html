@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 m-0">Assets</h1>
+  <a class="btn btn-outline-light" href="/assets/new/">+ Ajouter</a>
+</div>
+
+<div class="card bg-black border-secondary">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-dark table-striped align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Type</th>
+            <th>IP/Host</th>
+            <th>Tags</th>
+            <th>Enabled</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td class="fw-semibold">{{ it.name }}</td>
+            <td>{{ it.get_asset_type_display }}</td>
+            <td>{{ it.ip_or_host }}</td>
+            <td class="text-secondary">{{ it.tags }}</td>
+            <td>{% if it.is_enabled %}✅{% else %}❌{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
