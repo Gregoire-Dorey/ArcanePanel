@@ -10,8 +10,8 @@
 
 <p align="center">
   <!-- "Latest Release / Pre-Release" style comme ton screen -->
-  <img alt="Latest Release" src="https://img.shields.io/github/v/release/OWNER/REPO?label=release&style=flat&logo=github" />
-  <img alt="Latest Pre-Release" src="https://img.shields.io/github/v/release/OWNER/REPO?include_prereleases&label=pre-release&style=flat&logo=github" />
+  <img alt="Latest Release" src="https://img.shields.io/github/v/release/Gregoire-Dorey/ArcanePanel?label=release&style=flat&logo=github" />
+  <img alt="Latest Pre-Release" src="https://img.shields.io/github/v/release/Gregoire-Dorey/ArcanePanel?include_prereleases&label=pre-release&style=flat&logo=github" />
 </p>
 
 <p align="center">
