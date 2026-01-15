@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Arcane Panel</title>
+  <link rel="stylesheet" href="{% static 'core/arcane.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="arcane-shell">
+    <aside class="arcane-side">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <h1>Arcane Panel</h1>
+          <small>Ops cockpit • v2.1</small>
+        </div>
+      </div>
+
+      <nav class="navbox">
+        <a href="/" class="{% if request.path == '/' %}active{% endif %}">
+          <span>Dashboard</span><span class="pill">Live</span>
+        </a>
+        <a href="/assets/" class="{% if '/assets' in request.path %}active{% endif %}">
+          <span>Assets</span><span class="pill">Inventaire</span>
+        </a>
+        <a href="/checks/" class="{% if '/checks' in request.path %}active{% endif %}">
+          <span>Checks</span><span class="pill">Sondes</span>
+        </a>
+        <a href="/alerts/" class="{% if '/alerts' in request.path %}active{% endif %}">
+          <span>Alerts</span><span class="pill">Incidents</span>
+        </a>
+        <a href="/admin/" target="_blank">
+          <span>Admin</span><span class="pill">Backoffice</span>
+        </a>
+        <a href="/admin/logout/">
+          <span>Logout</span><span class="pill">Bye</span>
+        </a>
+      </nav>
+
+      <div style="margin-top:18px" class="muted">
+        Tip: ajoute des checks ping/http pour alimenter les graphs.
+      </div>
+    </aside>
+
+    <main class="arcane-main">
+      <div class="topbar">
+        <div>
+          <div class="page-title">{% block page_title %}{% endblock %}</div>
+          <div class="page-sub">Dernière vue: {{ now }}</div>
+        </div>
+        {% block top_right %}{% endblock %}
+      </div>
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

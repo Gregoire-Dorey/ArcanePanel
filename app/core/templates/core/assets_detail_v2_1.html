@@ -1,0 +1,134 @@
+{% extends "base_v2.html" %}
+{% block page_title %}{{ asset.name }}{% endblock %}
+
+{% block top_right %}
+  <a class="tag" href="/assets/">← Retour assets</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid3">
+  <div class="cardx">
+    <div class="kpi-title">Uptime 7 jours</div>
+    <div class="kpi-value {% if uptime_7d < 99 %}warn{% else %}good{% endif %}">{{ uptime_7d }}%</div>
+    <div class="kpi-sub">calcul basé sur CheckResult</div>
+  </div>
+
+  <div class="cardx">
+    <div class="kpi-title">Latence moyenne 7 jours</div>
+    <div class="kpi-value">{{ avg_latency_7d }}ms</div>
+    <div class="kpi-sub">si checks avec latence</div>
+  </div>
+
+  <div class="cardx">
+    <div class="kpi-title">Infos</div>
+    <div class="kpi-sub" style="margin-top:10px">
+      {% if asset.address %}<div><span class="pill">{{ asset.address }}</span></div>{% endif %}
+      {% if asset.tags %}<div style="margin-top:8px"><span class="pill">{{ asset.tags }}</span></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="cardx">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-weight:800">Latence (7 jours)</div>
+      <div class="pill">avg / heure</div>
+    </div>
+    <canvas id="lat7" height="120"></canvas>
+  </div>
+
+  <div class="cardx">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-weight:800">Uptime (7 jours)</div>
+      <div class="pill">% / heure</div>
+    </div>
+    <canvas id="up7" height="120"></canvas>
+  </div>
+</div>
+
+<div class="grid2" style="margin-top:14px">
+  <div class="cardx">
+    <div style="font-weight:800;margin-bottom:10px">Alertes ouvertes</div>
+    {% if open_alerts %}
+      <table class="tablex">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Check</th>
+            <th>Ouverte</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in open_alerts %}
+            <tr>
+              <td><span class="badgeX badge-open">{{ a.severity }}</span></td>
+              <td>{{ a.monitor_check.name }}</td>
+              <td>{{ a.opened_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="muted">Aucune alerte ouverte.</div>
+    {% endif %}
+  </div>
+
+  <div class="cardx">
+    <div style="font-weight:800;margin-bottom:10px">Derniers résultats</div>
+    {% if last_results %}
+      <table class="tablex">
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Statut</th>
+            <th>Latence</th>
+            <th>Quand</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in last_results %}
+            <tr>
+              <td>{{ r.monitor_check.name }}</td>
+              <td>
+                {% if r.ok %}
+                  <span class="badgeX badge-ok">OK</span>
+                {% else %}
+                  <span class="badgeX badge-ko">FAIL</span>
+                {% endif %}
+              </td>
+              <td>{% if r.latency_ms %}{{ r.latency_ms|floatformat:1 }}ms{% else %}-{% endif %}</td>
+              <td>{{ r.recorded_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="muted">Pas encore de résultats.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+async function loadSeries(url){
+  const r = await fetch(url, {credentials:"same-origin"});
+  return await r.json();
+}
+
+(async () => {
+  const lat = await loadSeries("/api/assets/{{ asset.id }}/latency-7d/");
+  const up = await loadSeries("/api/assets/{{ asset.id }}/uptime-7d/");
+
+  new Chart(document.getElementById("lat7"), {
+    type: "line",
+    data: { labels: lat.labels, datasets: [{ label: "ms", data: lat.values, tension: .35 }] },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{maxTicksLimit:10}} } }
+  });
+
+  new Chart(document.getElementById("up7"), {
+    type: "line",
+    data: { labels: up.labels, datasets: [{ label: "%", data: up.values, tension: .35 }] },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{suggestedMin:0,suggestedMax:100}, x:{ticks:{maxTicksLimit:10}} } }
+  });
+})();
+</script>
+{% endblock %}

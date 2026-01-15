@@ -1,0 +1,159 @@
+{% extends "base_v2.html" %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid3">
+  <div class="cardx">
+    <div class="kpi-title">Assets</div>
+    <div class="kpi-value">{{ assets_total }}</div>
+    <div class="kpi-sub">machines inventoriées</div>
+  </div>
+
+  <div class="cardx">
+    <div class="kpi-title">Checks</div>
+    <div class="kpi-value">{{ checks_total }}</div>
+    <div class="kpi-sub">sondes actives</div>
+  </div>
+
+  <div class="cardx">
+    <div class="kpi-title">Alerts open</div>
+    <div class="kpi-value {% if alerts_open %}warn{% else %}good{% endif %}">{{ alerts_open }}</div>
+    <div class="kpi-sub">incidents en cours</div>
+  </div>
+</div>
+
+<div class="grid3" style="margin-top:14px">
+  <div class="cardx">
+    <div class="kpi-title">Uptime 24h</div>
+    <div class="kpi-value {% if uptime_24h < 99 %}warn{% else %}good{% endif %}">{{ uptime_24h }}%</div>
+    <div class="kpi-sub">{{ total_results_24h }} résultats check</div>
+  </div>
+
+  <div class="cardx">
+    <div class="kpi-title">Latence moyenne 24h</div>
+    <div class="kpi-value">{{ avg_latency_24h }}ms</div>
+    <div class="kpi-sub">sur tous les checks avec latence</div>
+  </div>
+
+  <div class="cardx">
+    <div class="kpi-title">Top assets en alerte</div>
+    {% if top_alert_assets %}
+      <div style="margin-top:10px">
+        {% for it in top_alert_assets %}
+          <div style="display:flex;justify-content:space-between;margin:6px 0">
+            <span>{{ it.monitor_check__asset__name }}</span>
+            <span class="pill">{{ it.c }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="kpi-sub" style="margin-top:10px">Aucune alerte ouverte.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="split">
+  <div class="cardx">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-weight:800">Latence (24h)</div>
+      <div class="pill">avg / 10min</div>
+    </div>
+    <canvas id="latChart" height="120"></canvas>
+  </div>
+
+  <div class="cardx">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-weight:800">Uptime (24h)</div>
+      <div class="pill">% / heure</div>
+    </div>
+    <canvas id="upChart" height="120"></canvas>
+  </div>
+</div>
+
+<div class="grid2" style="margin-top:14px">
+  <div class="cardx">
+    <div style="font-weight:800;margin-bottom:10px">Checks failing (1h)</div>
+    {% if failing_checks_1h %}
+      <table class="tablex">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Check</th>
+            <th>Fails</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in failing_checks_1h %}
+            <tr>
+              <td>{{ it.monitor_check__asset__name }}</td>
+              <td>{{ it.monitor_check__name }}</td>
+              <td><span class="badgeX badge-ko">{{ it.fails }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="muted">Rien à signaler sur la dernière heure 👌</div>
+    {% endif %}
+  </div>
+
+  <div class="cardx">
+    <div style="font-weight:800;margin-bottom:10px">Dernières alertes</div>
+    {% if latest_alerts %}
+      <table class="tablex">
+        <thead>
+          <tr>
+            <th>Statut</th>
+            <th>Asset</th>
+            <th>Check</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in latest_alerts %}
+            <tr>
+              <td>
+                {% if a.is_open %}
+                  <span class="badgeX badge-open">OPEN</span>
+                {% else %}
+                  <span class="badgeX badge-closed">CLOSED</span>
+                {% endif %}
+              </td>
+              <td>{{ a.monitor_check.asset.name }}</td>
+              <td>{{ a.monitor_check.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="muted">Aucune alerte.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+async function loadSeries(url){
+  const r = await fetch(url, {credentials:"same-origin"});
+  return await r.json();
+}
+
+(async () => {
+  const lat = await loadSeries("/api/metrics/latency-24h/");
+  const up = await loadSeries("/api/metrics/uptime-24h/");
+
+  new Chart(document.getElementById("latChart"), {
+    type: "line",
+    data: { labels: lat.labels, datasets: [{ label: "ms", data: lat.values, tension: .35 }] },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{ticks:{maxTicksLimit:10}} } }
+  });
+
+  new Chart(document.getElementById("upChart"), {
+    type: "line",
+    data: { labels: up.labels, datasets: [{ label: "%", data: up.values, tension: .35 }] },
+    options: {
+      responsive:true, plugins:{legend:{display:false}},
+      scales:{ y:{suggestedMin:0,suggestedMax:100}, x:{ticks:{maxTicksLimit:10}} }
+    }
+  });
+})();
+</script>
+{% endblock %}

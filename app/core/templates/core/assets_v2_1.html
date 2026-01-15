@@ -1,0 +1,51 @@
+{% extends "base_v2.html" %}
+{% block page_title %}Assets{% endblock %}
+
+{% block content %}
+<div class="cardx">
+  <form method="get" class="searchbar">
+    <input class="input" type="text" name="q" value="{{ q }}" placeholder="Rechercher (nom, ip/host, tags, description)">
+    <input class="input" type="text" name="tag" value="{{ tag }}" placeholder="Filtre tag (ex: prod)">
+    <button class="btn" type="submit">Filtrer</button>
+    {% if q or tag %}
+      <a class="tag" href="/assets/">Reset</a>
+    {% endif %}
+  </form>
+
+  {% if tag_cloud %}
+    <div style="margin-top:12px" class="muted">Tags:</div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      {% for t in tag_cloud %}
+        <a class="tag" href="/assets/?tag={{ t }}">{{ t }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="asset-grid">
+  {% for a in assets %}
+    <a class="asset-card" href="/assets/{{ a.obj.id }}/">
+      <div class="asset-name">{{ a.obj.name }}</div>
+      <div class="asset-meta">
+        {% if a.obj.address %}<span class="pill">{{ a.obj.address }}</span>{% endif %}
+        <span class="pill">{{ a.checks }} checks</span>
+        {% if a.open_alerts %}
+          <span class="badgeX badge-open">{{ a.open_alerts }} open alerts</span>
+        {% else %}
+          <span class="badgeX badge-ok">OK</span>
+        {% endif %}
+      </div>
+
+      {% if a.tags %}
+        <div class="asset-tags">
+          {% for t in a.tags %}
+            <span class="tag">{{ t }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </a>
+  {% empty %}
+    <div class="cardx">Aucun asset.</div>
+  {% endfor %}
+</div>
+{% endblock %}
