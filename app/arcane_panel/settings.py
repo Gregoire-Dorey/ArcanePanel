@@ -1,4 +1,5 @@
 import os
+from django.urls import reverse_lazy
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -6,8 +7,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret")
 DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",") if h.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    "https://backend.arcanecloud.io",
+]
+
+LOGIN_URL = "/admin/login/"
+LOGIN_REDIRECT_URL="/"
+LOGOUT_REDIRECT_URL="/admin/login/"
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -17,6 +26,25 @@ INSTALLED_APPS = [
     "rest_framework",
     "core",
 ]
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Arcane Panel Admin",
+    "site_header": "Arcane Panel",
+    "site_brand": "Arcane",
+    "welcome_sign": "Bienvenue",
+    "theme": "darkly",
+    "topmenu_links": [
+        {"name": "Panel", "url": "/", "new_window": False},
+    ],
+    "icons": {
+        "auth.user": "fas fa-user",
+        "core.asset": "fas fa-server",
+        "core.check": "fas fa-heartbeat",
+        "core.alert": "fas fa-triangle-exclamation",
+        "core.job": "fas fa-gears",
+    },
+}
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

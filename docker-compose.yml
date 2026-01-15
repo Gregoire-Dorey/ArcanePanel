@@ -20,8 +20,8 @@ services:
     volumes:
       - ./app:/app
       - staticdata:/static
-    ports:
-      - "${PANEL_PORT:-8000}:8000"
+    expose:
+     - "8000"
     depends_on:
       - db
       - redis
@@ -48,6 +48,17 @@ services:
       - db
       - redis
     restart: unless-stopped
+
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${PANEL_PORT:-8000}:80"
+    volumes:
+      - staticdata:/static:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
 
 volumes:
   pgdata:
